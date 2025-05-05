@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MongoDB Tweets Viewer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>MongoDB Tweets Viewer</h1>
+
+  <button id="loadTweets">Load First 10 Tweets</button>
+  <button id="showLastTweet">Show Last Tweet</button>
+
+  <h3>Add a New Tweet:</h3>
+  <textarea id="newTweetText" placeholder="Type your tweet here..."></textarea>
+  <button id="addTweet">Add Tweet</button>
+
+  <h2>First 10 Tweets</h2>
+  <div id="tweets"></div>
+
+  <h2>Last Tweet</h2>
+  <div id="lastTweet"></div>
+
+  <script>
+    let tweetsVisible = false;
+  
+    async function loadTweets() {
+      const tweetsContainer = document.getElementById('tweets');
+      const button = document.getElementById('loadTweets');
+  
+      if (!tweetsVisible) {
+        const res = await fetch('/tweets');
+        const data = await res.json();
+        tweetsContainer.innerHTML = '';
+        data.forEach(tweet => {
+          tweetsContainer.innerHTML += `
+            <div class="tweet">
+              <p><strong>@${tweet.user?.screen_name || 'unknown'}</strong></p>
+              <p>${tweet.text}</p>
+              <small>${new Date(tweet.created_at).toLocaleString()}</small>
+            </div>
+          `;
+        });
+        tweetsVisible = true;
+        button.textContent = 'Hide First 10 Tweets';
+      } else {
+        tweetsContainer.innerHTML = '';
+        tweetsVisible = false;
+        button.textContent = 'Load First 10 Tweets';
+      }
+    }
+  
+    async function showLastTweet() {
+      const res = await fetch('/lasttweet');
+      const lastTweet = await res.json();
+      const lastTweetContainer = document.getElementById('lastTweet');
+      if (lastTweet) {
+        lastTweetContainer.innerHTML = `
+          <div class="tweet">
+            <p><strong>@${lastTweet.user?.screen_name || 'unknown'}</strong></p>
+            <p>${lastTweet.text}</p>
+            <small>${new Date(lastTweet.created_at).toLocaleString()}</small>
+          </div>
+        `;
+      } else {
+        lastTweetContainer.textContent = 'No tweets found.';
+      }
+    }
+  
+    async function addTweet() {
+      const text = document.getElementById('newTweetText').value.trim();
+      if (!text) {
+        alert('Please enter some text for the tweet.');
+        return;
+      }
+  
+      const newTweet = {
+        text: text,
+        created_at: new Date().toISOString(),
+        user: {
+          screen_name: 'localuser'
+        }
+      };
+  
+      const res = await fetch('/tweets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTweet)
+      });
+  
+      if (res.ok) {
+        alert('Tweet added successfully!');
+        document.getElementById('newTweetText').value = '';
+        showLastTweet();
+      } else {
+        alert('Error adding tweet.');
+      }
+    }
+  
+    document.getElementById('loadTweets').addEventListener('click', loadTweets);
+    document.getElementById('showLastTweet').addEventListener('click', showLastTweet);
+    document.getElementById('addTweet').addEventListener('click', addTweet);
+  </script>
+  
+  
+</body>
+</html>
