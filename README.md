@@ -1,6 +1,6 @@
 # MongoDB Sharding Assignment
 
-## 📚 Assignment Answers
+## Assignment Answers
 
 ### a) What is sharding in MongoDB?
 
